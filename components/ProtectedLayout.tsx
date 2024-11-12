@@ -9,6 +9,7 @@ export default function ProtectedLayout({
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [password, setPassword] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const handlePasswordSubmit = async () => {
     try {
@@ -32,12 +33,15 @@ export default function ProtectedLayout({
   };
 
   useEffect(() => {
+    setIsLoading(true);
     const checkAuthStatus = async () => {
       try {
         const response = await fetch("/api/check-auth");
         const data = await response.json();
         setIsAuthenticated(data.authenticated);
+        setIsLoading(false);
       } catch (error) {
+        setIsLoading(true);
         console.error("An error occurred while checking auth status:", error);
       }
     };
@@ -46,21 +50,30 @@ export default function ProtectedLayout({
   }, []);
 
   if (!isAuthenticated) {
-    return (
+    return isLoading ? (
+      <div>Loading...</div>
+    ) : (
       <div className="flex justify-center items-center min-h-screen">
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter password"
-          className="rounded-l-xl border border-gray-300 focus:border-gray-500 py-4 px-5 outline-none"
-        />
-        <button
-          onClick={handlePasswordSubmit}
-          className="bg-sky-600 hover:bg-sky-700 text-white rounded-r-xl py-4 px-5 border border-sky-600"
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handlePasswordSubmit();
+          }}
         >
-          Continue
-        </button>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter password"
+            className="rounded-l-xl border border-gray-300 focus:border-gray-500 py-4 px-5 outline-none"
+          />
+          <button
+            type="submit"
+            className="bg-sky-600 hover:bg-sky-700 text-white rounded-r-xl py-4 px-5 border border-sky-600"
+          >
+            Continue
+          </button>
+        </form>
       </div>
     );
   }
