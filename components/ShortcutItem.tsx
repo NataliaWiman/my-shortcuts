@@ -5,6 +5,8 @@ import React, { useRef, useState } from "react";
 import Tile from "./Tile";
 import Icon from "./icons/Icon";
 import useOnClickOutside from "@/utils/useClickOutside";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type ShortcutItemProps = {
   bookmark: Bookmark;
@@ -15,16 +17,44 @@ type ShortcutItemProps = {
 const ShortcutItem = ({ bookmark, onEdit, onDelete }: ShortcutItemProps) => {
   const menuRef = useRef(null);
   const [showMenu, setShowMenu] = useState(false);
+  const {
+    isDragging,
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({
+    id: bookmark.id,
+  });
 
   const handleCloseMenu = () => {
     setShowMenu(false);
   };
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   useOnClickOutside(menuRef, handleCloseMenu);
 
   return (
-    <div className="relative group">
-      <a href={bookmark.url} target="_blank" rel="noopener noreferrer">
+    <li
+      ref={setNodeRef}
+      className="relative group"
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
+      {isDragging && (
+        <div className="absolute top-0 left-0 w-full h-full"></div>
+      )}
+      <a
+        href={!isDragging ? bookmark.url : undefined}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <Tile title={bookmark.name || ""} favicon={bookmark.favicon || ""} />
       </a>
 
@@ -48,7 +78,7 @@ const ShortcutItem = ({ bookmark, onEdit, onDelete }: ShortcutItemProps) => {
               onEdit();
               setShowMenu(false);
             }}
-            className="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+            className="block w-full px-4 py-2 text-sm text-left whitespace-nowrap hover:bg-gray-100"
           >
             Edit shortcut
           </button>
@@ -63,7 +93,7 @@ const ShortcutItem = ({ bookmark, onEdit, onDelete }: ShortcutItemProps) => {
           </button>
         </div>
       )}
-    </div>
+    </li>
   );
 };
 
