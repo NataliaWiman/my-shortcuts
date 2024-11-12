@@ -17,7 +17,11 @@ const Shortcuts = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [newBookmark, setNewBookmark] = useState({ name: "", url: "" });
+  const [newBookmark, setNewBookmark] = useState({
+    name: "",
+    url: "",
+    favicon: "",
+  });
 
   // Load bookmarks from local storage
   useEffect(() => {
@@ -33,7 +37,7 @@ const Shortcuts = () => {
   }, [bookmarks]);
 
   const openAddModal = () => {
-    setNewBookmark({ name: "", url: "" });
+    setNewBookmark({ name: "", url: "", favicon: "" });
     setEditIndex(null);
     setShowModal(true);
   };
@@ -48,13 +52,13 @@ const Shortcuts = () => {
     if (!newBookmark.name || !newBookmark.url) return;
 
     const url = new URL(newBookmark.url);
-    const faviconUrl = `${url.origin}/favicon.ico`;
+    const defaultFaviconUrl = `${url.origin}/favicon.ico`;
 
     const newBookmarkWithFavicon: Bookmark = {
       id: editIndex !== null ? bookmarks[editIndex].id : Date.now(),
       name: newBookmark.name,
       url: newBookmark.url,
-      favicon: faviconUrl,
+      favicon: newBookmark.favicon || defaultFaviconUrl,
     };
 
     if (editIndex !== null) {
@@ -67,7 +71,7 @@ const Shortcuts = () => {
       setBookmarks([...bookmarks, newBookmarkWithFavicon]);
     }
 
-    setNewBookmark({ name: "", url: "" });
+    setNewBookmark({ name: "", url: "", favicon: "" });
     setEditIndex(null);
     setShowModal(false);
   };
@@ -164,6 +168,21 @@ const Shortcuts = () => {
               className="block w-full mb-4 p-2 border border-gray-300 rounded"
             />
           </label>
+          {editIndex !== null && (
+            <label htmlFor="favicon">
+              <span className="font-semibold text-sm">Favicon URL</span>
+              <input
+                id="favicon"
+                type="url"
+                placeholder="Favicon URL"
+                value={newBookmark.favicon || ""}
+                onChange={(e) =>
+                  setNewBookmark({ ...newBookmark, favicon: e.target.value })
+                }
+                className="block w-full mb-4 p-2 border border-gray-300 rounded"
+              />
+            </label>
+          )}
 
           <div className="flex justify-end">
             <button

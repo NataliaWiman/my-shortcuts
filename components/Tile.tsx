@@ -16,12 +16,7 @@ const Tile = ({
         {isAddNew && <Icon name="plus" />}
         {favicon && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={favicon}
-            alt={`${title} favicon`}
-            className="w-6 h-6"
-            onError={(e) => (e.currentTarget.style.display = "none")}
-          />
+          <img src={favicon} alt={`${title} favicon`} className="w-6 h-6" />
         )}
       </div>
       <span className="font-medium text-sm">{title}</span>
