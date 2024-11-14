@@ -24,6 +24,7 @@ const Search = () => {
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyPress}
         className="w-full outline-none"
+        autoFocus
       />
     </div>
   );
