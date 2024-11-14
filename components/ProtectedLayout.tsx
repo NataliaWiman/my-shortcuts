@@ -51,7 +51,10 @@ export default function ProtectedLayout({
 
   if (!isAuthenticated) {
     return isLoading ? (
-      <div>Loading...</div>
+      <div
+        role="status"
+        className="fixed top-0 left-0 w-screen h-screen animate-pulse bg-neutral-200"
+      ></div>
     ) : (
       <div className="flex justify-center items-center min-h-screen">
         <form
