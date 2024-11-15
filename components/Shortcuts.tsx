@@ -42,6 +42,7 @@ const Shortcuts = () => {
     if (lastViewMode) {
       const currentViewMode = JSON.parse(lastViewMode);
       setViewMode(currentViewMode);
+      setSelectedLabel(currentViewMode);
     }
   }, []);
 
