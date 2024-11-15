@@ -17,17 +17,25 @@ const Shortcuts = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [selectedLabel, setSelectedLabel] = useState<string>("all");
   const [newBookmark, setNewBookmark] = useState({
     name: "",
     url: "",
     favicon: "",
+    labels: [""],
   });
 
   // Load bookmarks from local storage
   useEffect(() => {
     const savedBookmarks = localStorage.getItem("bookmarks");
     if (savedBookmarks) {
-      setBookmarks(JSON.parse(savedBookmarks));
+      const parsedBookmarks: Bookmark[] = JSON.parse(savedBookmarks).map(
+        (bookmark: Bookmark) => ({
+          ...bookmark,
+          labels: bookmark.labels || [],
+        })
+      );
+      setBookmarks(parsedBookmarks);
     }
   }, []);
 
@@ -36,8 +44,13 @@ const Shortcuts = () => {
     localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
   }, [bookmarks]);
 
+  const getUniqueLabels = () => {
+    const allLabels = bookmarks.flatMap((bookmark) => bookmark.labels);
+    return Array.from(new Set(allLabels));
+  };
+
   const openAddModal = () => {
-    setNewBookmark({ name: "", url: "", favicon: "" });
+    setNewBookmark({ name: "", url: "", favicon: "", labels: [] });
     setEditIndex(null);
     setShowModal(true);
   };
@@ -54,24 +67,25 @@ const Shortcuts = () => {
     const url = new URL(newBookmark.url);
     const defaultFaviconUrl = `${url.origin}/favicon.ico`;
 
-    const newBookmarkWithFavicon: Bookmark = {
+    const newBookmarkEdited: Bookmark = {
       id: editIndex !== null ? bookmarks[editIndex].id : Date.now(),
       name: newBookmark.name,
       url: newBookmark.url,
       favicon: newBookmark.favicon || defaultFaviconUrl,
+      labels: newBookmark.labels || [],
     };
 
     if (editIndex !== null) {
       // Edit existing bookmark
       const updatedBookmarks = [...bookmarks];
-      updatedBookmarks[editIndex] = newBookmarkWithFavicon;
+      updatedBookmarks[editIndex] = newBookmarkEdited;
       setBookmarks(updatedBookmarks);
     } else {
       // Add new bookmark
-      setBookmarks([...bookmarks, newBookmarkWithFavicon]);
+      setBookmarks([...bookmarks, newBookmarkEdited]);
     }
 
-    setNewBookmark({ name: "", url: "", favicon: "" });
+    setNewBookmark({ name: "", url: "", favicon: "", labels: [] });
     setEditIndex(null);
     setShowModal(false);
   };
@@ -80,6 +94,11 @@ const Shortcuts = () => {
     const updatedBookmarks = bookmarks.filter((_, i) => i !== index);
     setBookmarks(updatedBookmarks);
   };
+
+  const filteredBookmarks =
+    selectedLabel === "all"
+      ? bookmarks
+      : bookmarks.filter((bookmark) => bookmark.labels.includes(selectedLabel));
 
   // DnD Kit configuration
   const sensors = useSensors(
@@ -106,6 +125,33 @@ const Shortcuts = () => {
 
   return (
     <div className="w-full mx-auto py-4">
+      {getUniqueLabels().length > 0 && (
+        <div className="flex justify-center rounded-md mt-2 mb-4">
+          <button
+            onClick={() => setSelectedLabel("all")}
+            className={`mr-4 py-2 text-sm font-medium underline-offset-2 hover:underline ${
+              selectedLabel === "all" ? "underline" : ""
+            }`}
+          >
+            show all
+          </button>
+          <div className="flex">
+            {getUniqueLabels().map((label) => (
+              <button
+                key={label}
+                onClick={() => setSelectedLabel(label)}
+                className={`px-4 py-2 text-sm font-medium border border-neutral-300 first:rounded-l-lg last:rounded-r-lg ${
+                  selectedLabel === label
+                    ? "bg-neutral-300"
+                    : "bg-transparent hover:bg-neutral-100 hover:text-neutral-800"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <ul className="flex flex-wrap">
         <DndContext
           sensors={sensors}
@@ -113,7 +159,7 @@ const Shortcuts = () => {
           onDragEnd={onDragEnd}
         >
           <SortableContext items={bookmarks.map((bookmark) => bookmark.id)}>
-            {bookmarks.map((bookmark, index) => (
+            {filteredBookmarks.map((bookmark, index) => (
               <ShortcutItem
                 key={bookmark.id}
                 bookmark={bookmark}
@@ -164,6 +210,26 @@ const Shortcuts = () => {
               required
               onChange={(e) =>
                 setNewBookmark({ ...newBookmark, url: e.target.value })
+              }
+              className="block w-full mb-4 p-2 border border-gray-300 rounded"
+            />
+          </label>
+          <label htmlFor="labels">
+            <span className="font-semibold text-sm">
+              Labels (comma-separated)
+            </span>
+            <input
+              id="labels"
+              type="text"
+              placeholder="e.g., work, personal"
+              value={newBookmark.labels ? newBookmark.labels.join(", ") : ""}
+              onChange={(e) =>
+                setNewBookmark({
+                  ...newBookmark,
+                  labels: e.target.value
+                    .split(",")
+                    .map((label) => label.trim()),
+                })
               }
               className="block w-full mb-4 p-2 border border-gray-300 rounded"
             />

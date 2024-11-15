@@ -52,7 +52,7 @@ const ShortcutItem = ({ bookmark, onEdit, onDelete }: ShortcutItemProps) => {
       )}
       <a
         href={!isDragging ? bookmark.url : undefined}
-        target="_blank"
+        target="_self"
         rel="noopener noreferrer"
       >
         <Tile title={bookmark.name || ""} favicon={bookmark.favicon || ""} />
