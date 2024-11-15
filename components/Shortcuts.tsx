@@ -17,7 +17,8 @@ const Shortcuts = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [selectedLabel, setSelectedLabel] = useState<string>("all");
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<string | null>(null);
   const [newBookmark, setNewBookmark] = useState({
     name: "",
     url: "",
@@ -37,12 +38,18 @@ const Shortcuts = () => {
       );
       setBookmarks(parsedBookmarks);
     }
+    const lastViewMode = localStorage.getItem("viewMode");
+    if (lastViewMode) {
+      const currentViewMode = JSON.parse(lastViewMode);
+      setViewMode(currentViewMode);
+    }
   }, []);
 
   // Save bookmarks to local storage
   useEffect(() => {
     localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
-  }, [bookmarks]);
+    localStorage.setItem("viewMode", JSON.stringify(viewMode));
+  }, [bookmarks, viewMode]);
 
   const getUniqueLabels = () => {
     const allLabels = bookmarks.flatMap((bookmark) => bookmark.labels);
@@ -95,10 +102,14 @@ const Shortcuts = () => {
     setBookmarks(updatedBookmarks);
   };
 
-  const filteredBookmarks =
-    selectedLabel === "all"
-      ? bookmarks
-      : bookmarks.filter((bookmark) => bookmark.labels.includes(selectedLabel));
+  const handleFilter = (label: string | null) => {
+    setSelectedLabel(label);
+    setViewMode(label);
+  };
+
+  const filteredBookmarks = !selectedLabel
+    ? bookmarks
+    : bookmarks.filter((bookmark) => bookmark.labels.includes(selectedLabel));
 
   // DnD Kit configuration
   const sensors = useSensors(
@@ -128,9 +139,9 @@ const Shortcuts = () => {
       {getUniqueLabels().length > 0 && (
         <div className="flex justify-center rounded-md mt-2 mb-4">
           <button
-            onClick={() => setSelectedLabel("all")}
+            onClick={() => handleFilter(null)}
             className={`mr-4 py-2 text-sm font-medium underline-offset-2 hover:underline ${
-              selectedLabel === "all" ? "underline" : ""
+              !selectedLabel ? "underline" : ""
             }`}
           >
             show all
@@ -139,7 +150,7 @@ const Shortcuts = () => {
             {getUniqueLabels().map((label) => (
               <button
                 key={label}
-                onClick={() => setSelectedLabel(label)}
+                onClick={() => handleFilter(label)}
                 className={`px-4 py-2 text-sm font-medium border border-neutral-300 first:rounded-l-lg last:rounded-r-lg ${
                   selectedLabel === label
                     ? "bg-neutral-300"
